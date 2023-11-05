@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  postgres:
+    container_name: postgres
+    image: postgres:16rc1-alpine3.18
+    env_file:
+      - ./docker/postgres/.env
+    volumes:
+      - ./docker/postgres/dump:/var/lib/postgresql/data
+      - ./docker/postgres/init/docker_postgres_init.sql:/docker-entrypoint-initdb.d/docker_postgres_init.sql
+    ports:
+      - 5432:5432
+    restart: unless-stopped
+    networks:
+      - tabletki
+  pgadmin:
+    container_name: pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - ./docker/pgadmin:/var/lib/pgadmin
+    ports:
+      - 5050:80
+    depends_on:
+      - postgres
+    networks:
+      - tabletki
+    restart: unless-stopped
+  backend:
+    container_name: backend
+    build: 
+      context: ./backend
+      dockerfile: ./Dockerfile
+    env_file:
+      - ./docker/backend/.env
+    volumes:
+      - ./backend:/app
+    restart: unless-stopped
+    depends_on:
+      - pgadmin
+    networks:
+      - tabletki
+
+networks:
+  tabletki:
+    driver: bridge
