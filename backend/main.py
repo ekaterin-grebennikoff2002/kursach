@@ -216,7 +216,6 @@ async def routine():
         try:
             cursor.execute(select_query, (current_datetime,))
             records = cursor.fetchall()
-            print(len(records))
             for record in records:
                 builder = InlineKeyboardBuilder()
                 builder.add(types.InlineKeyboardButton(
@@ -228,7 +227,6 @@ async def routine():
                     callback_data="Отложена|"+record[0])
                 )
                 await bot.send_message(chat_id=record[2], text=record[1], reply_markup=builder.as_markup())
-                print('done')
                 update_query = """
                     UPDATE notifications
                     SET isDone = TRUE
@@ -250,5 +248,3 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
     asyncio.run(main())
     
-
-
