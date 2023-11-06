@@ -1,11 +1,9 @@
 import os
-import time
 import psycopg2
 import asyncio
 import logging
 import sys
 import pytz
-import schedule
 from datetime import datetime, timedelta
 from croniter import croniter
 from aiogram import Bot, Dispatcher, types

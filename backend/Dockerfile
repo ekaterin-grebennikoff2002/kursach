@@ -20,6 +20,5 @@ RUN pip install psycopg2
 RUN pip install aiogram
 RUN pip install croniter
 RUN pip install pytz
-RUN pip install schedule
 
 CMD [ "nodemon", "--legacy-watch", "./main.py" ]
