@@ -1,16 +1,13 @@
 CREATE DATABASE tabletki;
 \c tabletki;
 
-CREATE TABLE UserAccount  (
-    id UUID PRIMARY KEY,
-    chat VARCHAR(255)
-);
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-CREATE TABLE Notifications (
-    id UUID PRIMARY KEY,
-    userId UUID,
+CREATE TABLE notifications (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
     text TEXT,
+    chat VARCHAR(255),
     template VARCHAR(255),
-    nextDate DATE,
-    FOREIGN KEY (userId) REFERENCES UserAccount(id)
+    nextDate TIMESTAMPTZ,
+    isDone BOOLEAN
 );
