@@ -14,22 +14,6 @@ services:
     restart: unless-stopped
     networks:
       - tabletki
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4
-    environment:
-      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
-      PGADMIN_DEFAULT_PASSWORD: admin
-      PGADMIN_CONFIG_SERVER_MODE: 'False'
-    volumes:
-      - ./docker/pgadmin:/var/lib/pgadmin
-    ports:
-      - 5050:80
-    depends_on:
-      - postgres
-    networks:
-      - tabletki
-    restart: unless-stopped
   backend:
     container_name: backend
     build: 
@@ -41,7 +25,7 @@ services:
       - ./backend:/app
     restart: unless-stopped
     depends_on:
-      - pgadmin
+      - postgres
     networks:
       - tabletki
 
