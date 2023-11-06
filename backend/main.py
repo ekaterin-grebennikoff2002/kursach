@@ -77,7 +77,7 @@ async def set_reminder(message: types.Message):
         nextDate = iter.get_next()
         nextDateMoscow = utc_to_moscow(datetime.fromtimestamp(nextDate))
         insert_query = "INSERT INTO notifications (text, chat, template, nextDate, isDone) VALUES (%s, %s, %s, %s, %s)"
-        values = (medication_name, chatId, cron_expression, nextDateMoscow, False)
+        values = (medication_name, chatId, cron_expression, nextDateMoscow, True)
 
         cursor = connection.cursor()    
         cursor.execute(insert_query, values)
@@ -205,41 +205,46 @@ async def delayNotification(callback: types.CallbackQuery):
         await callback.answer("Напоминание не найдено")
 
 async def routine():
-    print('routin started')
-    cursor = connection.cursor()
-    select_query = """
-SELECT id, text, chat
-FROM notifications
-WHERE isDone = FALSE OR nextDate < %s;"""
-    current_datetime = datetime.now()
-    try:
-        cursor.execute(select_query, (current_datetime,))
-        records = cursor.fetchall()
-        for record in records:
-            builder = InlineKeyboardBuilder()
-            builder.add(types.InlineKeyboardButton(
-                text="Таблетка выпита",
-                callback_data="Выпита|"+record[0])
-            )
-            builder.add(types.InlineKeyboardButton(
-                text="Отложить на 10 минут",
-                callback_data="Отложена|"+record[0])
-            )
-            await bot.send_message(chat_id=record[2], text=record[2], reply_markup=builder.as_markup())
-        for record in records:
-            update_query = """
-                UPDATE notifications
-                SET isDone = TRUE
-                WHERE id = %s;"""
-            cursor.execute(update_query, (record[0],))
-        connection.commit()
-    except psycopg2.Error as e:
-        print(f"Error selecting records: {e}")
+    while True:
+        await asyncio.sleep(30)
+        cursor = connection.cursor()
+        select_query = """
+    SELECT id, text, chat
+    FROM notifications
+    WHERE isDone = FALSE OR nextDate < %s;"""
+        current_datetime = datetime.now()
+        try:
+            cursor.execute(select_query, (current_datetime,))
+            records = cursor.fetchall()
+            print(len(records))
+            for record in records:
+                builder = InlineKeyboardBuilder()
+                builder.add(types.InlineKeyboardButton(
+                    text="Таблетка выпита",
+                    callback_data="Выпита|"+record[0])
+                )
+                builder.add(types.InlineKeyboardButton(
+                    text="Отложить на 10 минут",
+                    callback_data="Отложена|"+record[0])
+                )
+                await bot.send_message(chat_id=record[2], text=record[1], reply_markup=builder.as_markup())
+                print('done')
+                update_query = """
+                    UPDATE notifications
+                    SET isDone = TRUE
+                    WHERE id = %s;"""
+                cursor.execute(update_query, (record[0],))
+            connection.commit()
+        except psycopg2.Error as e:
+            print(f"Error selecting records: {e}")
+        print('routin ended')
 
+
+async def polling():
+    await dp.start_polling(bot)
 
 async def main():
-    await dp.start_polling(bot)
-    
+    await asyncio.gather(polling(), routine())
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, stream=sys.stdout)
